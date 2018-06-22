@@ -28,6 +28,8 @@ public class Notification {
 
     private int actionRequired;
 
+    private int ackCount;
+
     private int timeout;
 
     private Map<String, Object> data;
