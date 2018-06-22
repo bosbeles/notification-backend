@@ -1,4 +1,4 @@
-package tr.com.milsoft.tur.notification;
+package tr.com.bosbeles.tur.notification;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;

@@ -1,4 +1,4 @@
-package tr.com.milsoft.tur.notification.business;
+package tr.com.bosbeles.tur.notification.business;
 
 import org.springframework.stereotype.Service;
 

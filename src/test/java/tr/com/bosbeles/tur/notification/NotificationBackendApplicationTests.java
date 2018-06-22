@@ -1,4 +1,4 @@
-package tr.com.milsoft.tur.notification;
+package tr.com.bosbeles.tur.notification;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;

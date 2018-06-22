@@ -1,4 +1,4 @@
-package tr.com.milsoft.tur.notification.model;
+package tr.com.bosbeles.tur.notification.model;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
