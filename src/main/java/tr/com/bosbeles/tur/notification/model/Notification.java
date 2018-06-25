@@ -3,44 +3,44 @@ package tr.com.bosbeles.tur.notification.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedDate;
+import tr.com.bosbeles.tur.notification.model.internal.Configuration;
+import tr.com.bosbeles.tur.notification.model.internal.State;
 
-import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 @Data
 @EqualsAndHashCode(of = {"id"})
 public class Notification {
 
-    public static final int CREATED = 0;
-    public static final int UPDATED = 1;
-    public static final int ACKED = 2;
-    public static final int HANDLED = 3;
-    public static final int CANCELLED = 4;
-    public static final int EXPIRED = 5;
+    public enum NotificationType { SIMPLE, ACKED, ACTIONED}
+    public enum NotificationState {CREATED, UPDATED, ACKED, ASSIGNED, HANDLED, EXPIRED, CANCELLED};
 
     @Id
     private String id;
+    private NotificationTemplate template;
+    private boolean deleted;
 
-    private String channel;
-
-    private int ackRequired;
-
-    private int actionRequired;
-
-    private int ackCount;
-
-    private int timeout;
-
+    private Configuration configuration;
     private Map<String, Object> data;
 
-    private Date created;
+    private List<State> states;
+    private NotificationState currentState;
 
-    private Date expired;
 
-    @LastModifiedDate
-    private Date modified;
 
-    private int state;
+
+    public NotificationType getNotificationType() {
+        NotificationType type = NotificationType.SIMPLE;
+        if (configuration.getAction() != null && configuration.getAction().getRequired() > 0) {
+            type = NotificationType.ACTIONED;
+        } else if (configuration.getAcknowledgement() != null && configuration.getAcknowledgement().getRequired() > 0) {
+            type = NotificationType.ACKED;
+        }
+
+        return type;
+    }
+
+
 
 }
