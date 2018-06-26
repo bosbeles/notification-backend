@@ -15,10 +15,11 @@ public class NotificationController {
     @Autowired
     private NotificationRepository repository;
 
+
     @GetMapping("/sse/string")
     Flux<String> string() {
         Notification notification = new Notification();
-        repository.save(notification).map(Notification::getId);
+
         return Flux
                 .interval(Duration.ofSeconds(1))
                 .map(l -> "foo " + l);

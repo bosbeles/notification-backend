@@ -3,6 +3,8 @@ package tr.com.bosbeles.tur.notification.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.mapping.Document;
 import tr.com.bosbeles.tur.notification.model.internal.Configuration;
 import tr.com.bosbeles.tur.notification.model.internal.State;
 
@@ -11,6 +13,7 @@ import java.util.Map;
 
 @Data
 @EqualsAndHashCode(of = {"id"})
+@Document(collection = "notifications")
 public class Notification {
 
     public enum NotificationType { SIMPLE, ACKED, ACTIONED}
@@ -19,7 +22,7 @@ public class Notification {
     @Id
     private String id;
     private NotificationTemplate template;
-    private boolean deleted;
+    private boolean terminated;
 
     private Configuration configuration;
     private Map<String, Object> data;
@@ -27,7 +30,8 @@ public class Notification {
     private List<State> states;
     private NotificationState currentState;
 
-
+    @Version
+    private Long version;
 
 
     public NotificationType getNotificationType() {
