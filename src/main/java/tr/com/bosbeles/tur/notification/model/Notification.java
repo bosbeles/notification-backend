@@ -16,8 +16,11 @@ import java.util.Map;
 @Document(collection = "notifications")
 public class Notification {
 
-    public enum NotificationType { SIMPLE, ACKED, ACTIONED}
-    public enum NotificationState {CREATED, UPDATED, ACKED, ASSIGNED, HANDLED, EXPIRED, CANCELLED};
+    public enum NotificationType {SIMPLE, ACKED, ACTIONED}
+
+    public enum NotificationState {CREATED, UPDATED, ACKED, ASSIGNED, HANDLED, EXPIRED, CANCELLED}
+
+    ;
 
     @Id
     private String id;
@@ -44,7 +47,6 @@ public class Notification {
 
         return type;
     }
-
 
 
 }

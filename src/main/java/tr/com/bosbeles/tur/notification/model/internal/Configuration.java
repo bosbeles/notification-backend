@@ -13,16 +13,16 @@ public class Configuration {
 
 
     public void merge(Configuration template) {
-        if(StringUtils.isEmpty(channel)) {
+        if (StringUtils.isEmpty(channel)) {
             channel = template.getChannel();
         }
-        if(acknowledgement == null) {
+        if (acknowledgement == null) {
             acknowledgement = template.getAcknowledgement();
         }
-        if(action == null) {
+        if (action == null) {
             action = template.getAction();
         }
-        if(timeout < 0) {
+        if (timeout < 0) {
             timeout = template.getTimeout();
         }
     }
