@@ -1,28 +1,76 @@
 package tr.com.bosbeles.tur.notification.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import tr.com.bosbeles.tur.notification.business.NotificationManager;
 import tr.com.bosbeles.tur.notification.model.Notification;
-import tr.com.bosbeles.tur.notification.repository.NotificationRepository;
 
-import java.time.Duration;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
+@RequestMapping("notifications")
 public class NotificationController {
 
     @Autowired
-    private NotificationRepository repository;
+    private NotificationManager notificationManager;
 
 
-    @GetMapping("/sse/string")
-    Flux<String> string() {
-        Notification notification = new Notification();
-
-        return Flux
-                .interval(Duration.ofSeconds(1))
-                .map(l -> "foo " + l);
-
+    @PostMapping()
+    public Mono<Notification> create(@RequestBody Notification notification) {
+        return notificationManager.create(notification);
     }
+
+    @GetMapping("{id}")
+    public Mono<Notification> get(@PathVariable String id) {
+        return notificationManager.find(id);
+    }
+
+
+    @PostMapping("{id}")
+    public Mono<Notification> update(@PathVariable String id, @RequestBody Notification notification) {
+        notification.setId(id);
+        return notificationManager.update(notification);
+    }
+
+    @PostMapping("{id}/cancel")
+    public Mono<Void> cancel(@PathVariable String id) {
+        return notificationManager.cancel(id);
+    }
+
+    @PostMapping("{id}/read")
+    public Mono<Void> read(@PathVariable String id, @RequestParam(name = "ApiKey") final String apiKey) {
+        return notificationManager.read(apiKey, id);
+    }
+
+    @PostMapping("{id}/ack")
+    public Mono<Void> ack(@PathVariable String id, @RequestParam(name = "ApiKey") final String apiKey) {
+        return notificationManager.ack(apiKey, id);
+    }
+
+    @PostMapping("{id}/handle")
+    public Mono<Void> handle(@PathVariable String id, @RequestParam(name = "ApiKey") final String apiKey) {
+        return notificationManager.handle(apiKey, id);
+    }
+
+
+    //TODO Channel listesi icin tek query calistirilabilir ya da
+    //ayri query'lerin sonuclari birlestirilebilir (ya da kesişmeyen query'lerin sonuclari birlestirilir)
+    @GetMapping
+    public Mono<Map<String, List<Notification>>> getNotifications(@RequestParam("channel") String[] channels, @RequestParam(required = false) boolean recursive) {
+        Flux<Notification> notifications = notificationManager.findAll(channels, recursive);
+        Mono<Map<String, List<Notification>>> groupedByChannel = notifications.collect(Collectors.groupingBy(n -> n.getConfiguration().getChannel()));
+        return groupedByChannel;
+    }
+
+
+    @GetMapping(value = "/subscribe", produces = "text/event-stream")
+    public Flux<String> subscribe(@RequestParam(name = "ApiKey") final String apiKey, final @RequestParam(name = "channel") String[] channels) {
+        System.out.println(apiKey + " connected.");
+        return notificationManager.subscribe(apiKey, channels);
+    }
+
 }

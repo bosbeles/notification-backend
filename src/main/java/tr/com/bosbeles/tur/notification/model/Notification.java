@@ -8,6 +8,8 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import tr.com.bosbeles.tur.notification.model.internal.Configuration;
 import tr.com.bosbeles.tur.notification.model.internal.State;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -20,8 +22,6 @@ public class Notification {
 
     public enum NotificationState {CREATED, UPDATED, ACKED, ASSIGNED, HANDLED, EXPIRED, CANCELLED}
 
-    ;
-
     @Id
     private String id;
     private NotificationTemplate template;
@@ -32,6 +32,9 @@ public class Notification {
 
     private List<State> states;
     private NotificationState currentState;
+
+    private LocalDateTime expireAt;
+    private LocalDateTime modifiedAt;
 
     @Version
     private Long version;
@@ -46,6 +49,54 @@ public class Notification {
         }
 
         return type;
+    }
+
+    public void advanceState() {
+        if (isTerminated()) {
+            return;
+        }
+        switch (currentState) {
+            case HANDLED:
+            case CANCELLED:
+            case EXPIRED:
+                terminated = true;
+                break;
+            case ACKED:
+                if (getConfiguration().getAction().getRequired() <= 0) {
+                    terminated = true;
+                }
+                break;
+            default:
+                otherCases();
+        }
+
+    }
+
+
+    public void fill() {
+        if (configuration == null) {
+            configuration = new Configuration();
+            configuration.fill();
+        }
+        if (states == null) {
+            states = new ArrayList<>();
+        }
+        configuration.fill();
+    }
+
+    private void otherCases() {
+        int required = getConfiguration().getAcknowledgement().getRequired();
+        if (required > 0 && required <= getConfiguration().getAcknowledgement().getCount()) {
+            currentState = NotificationState.ACKED;
+            states.add(new State(currentState));
+            if (getConfiguration().getAction().getRequired() <= 0) {
+                terminated = true;
+            }
+        } else if (expireAt != null && LocalDateTime.now().isAfter(expireAt)) {
+            currentState = NotificationState.EXPIRED;
+            states.add(new State(currentState));
+            terminated = true;
+        }
     }
 
 

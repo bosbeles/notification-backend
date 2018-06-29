@@ -27,4 +27,13 @@ public class Configuration {
         }
     }
 
+    public void fill() {
+        if (acknowledgement == null) {
+            acknowledgement = new Acknowledgement();
+        }
+        if (action == null) {
+            action = new Action();
+        }
+    }
+
 }

@@ -2,6 +2,7 @@ package tr.com.bosbeles.tur.notification.business;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tr.com.bosbeles.tur.notification.model.NotificationTemplate;
 import tr.com.bosbeles.tur.notification.repository.NotificationTemplateRepository;
@@ -24,6 +25,10 @@ public class NotificationTemplateManager {
         return templateRepository.findById(templateId).doOnSuccess(template -> {
             // Censor some fields.
         });
+    }
+
+    public Flux<NotificationTemplate> list() {
+        return templateRepository.findAll();
     }
 
     public Mono<NotificationTemplate> update(final NotificationTemplate template) {

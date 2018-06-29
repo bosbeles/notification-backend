@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link href="webjars/toastr/2.1.2/build/toastr.css" rel="stylesheet"/>
+    <link href="webjars/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet"/>
+
+</head>
+<body>
+<button class="btn btn-success" onclick="publish()">Publish</button>
+
+<script src="webjars/jquery/3.3.1-1/jquery.min.js"></script>
+<script src="webjars/toastr/2.1.2/toastr.js"></script>
+
+<script>
+    function publish() {
+        var data = {"data": {"name": "a"}};
+        $.ajax({
+            url: "/notifications",
+            type: "POST",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+            },
+            error: function (error) {
+                console.log("Something went wrong", error);
+            }
+        });
+    }
+
+    jQuery.ajaxSettings.traditional = true;
+
+
+    var source = new EventSource("/notifications/subscribe?ApiKey=key&channel=test.test");
+    source.onopen = function () {
+        console.log("Connection is open.");
+    };
+
+
+    source.onmessage = function (event) {
+        console.log(event.data);
+    };
+
+</script>
+</body>
+</html>
