@@ -1,3 +1,4 @@
+/*
 package tr.com.bosbeles.tur.notification.controller;
 
 import reactor.core.publisher.Flux;
@@ -39,3 +40,4 @@ public class NotificationControllerJersey {
 
 
 }
+*/

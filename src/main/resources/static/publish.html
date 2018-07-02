@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Publish</title>
+    <link href="webjars/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.18.0/jsoneditor.css" rel="stylesheet">
+
+</head>
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div id="jsoneditor" style="width: 400px; height: 400px;"></div>
+        </div>
+        <div class="col">
+            <div id="readonlyjson" style="width: 400px; height: 400px;"></div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col">
+            <button class="btn btn-primary" onclick="publish()">Publish</button>
+            <button class="btn btn-secondary" onclick="simple()">Simple</button>
+            <button class="btn btn-secondary" onclick="full()">Full</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-success" onclick="copyRightToLeft()">Copy Right to Left</button>
+        </div>
+
+    </div>
+</div>
+
+
+<br>
+
+<table class="table" id="notifications">
+    <thead>
+    <tr>
+        <th scope="col">Notification Id</th>
+        <th scope="col">Refresh</th>
+        <th scope="col">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
+
+<script>
+
+</script>
+
+<script src="webjars/jquery/3.3.1-1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.18.0/jsoneditor.js"></script>
+
+<script>
+    var editor;
+    var readonly;
+
+    var simpleJson = {
+        "configuration": {
+            "timeout": 10,
+            "channel": "deneme",
+        },
+        "data": {
+            "category": "cat-1",
+            "params": [1, 2, 3]
+        }
+    };
+
+    var fullJson = {
+        "configuration": {
+            "timeout": 0,
+            "channel": "deneme",
+        },
+        "data": {
+            "category": "cat-1",
+            "params": [1, 2, 3]
+        }
+    };
+
+    (function jsoneditor() {
+        // create the editor
+        var container = document.getElementById("jsoneditor");
+        var options = {
+            mode: 'code',
+            modes: ['code', 'form', 'text', 'tree', 'view'], // allowed modes
+            onError: function (err) {
+                alert(err.toString());
+            },
+            onModeChange: function (newMode, oldMode) {
+                console.log('Mode switched from', oldMode, 'to', newMode);
+            }
+        };
+        editor = new JSONEditor(container, options);
+        var json = simpleJson;
+        // set json
+
+        editor.set(json);
+    })();
+
+    (function readonlyeditor() {
+        // create the editor
+        var container = document.getElementById("readonlyjson");
+        var options = {
+            mode: 'view',
+            modes: ['code', 'form', 'text', 'tree', 'view'], // allowed modes
+            onError: function (err) {
+                alert(err.toString());
+            },
+            onModeChange: function (newMode, oldMode) {
+                console.log('Mode switched from', oldMode, 'to', newMode);
+            }
+        };
+        readonly = new JSONEditor(container, options);
+        readonly.set("");
+        // set json
+
+
+    })();
+
+    function simple() {
+        editor.set(simpleJson);
+    }
+
+    function full() {
+        editor.set(fullJson);
+    }
+
+    function copyRightToLeft() {
+        editor.set(readonly.get());
+
+    }
+
+    function refresh(id) {
+        $.ajax({
+            url: "/notifications/" + id,
+            type: "GET",
+            success: function (response) {
+                console.log(response);
+                readonly.set(response);
+            },
+            error: function (error) {
+                console.log("Something went wrong", error);
+                var errorJson = {error: error.responseText};
+                readonly.set(errorJson);
+            }
+        });
+    }
+
+
+    function cancel(id) {
+        $.ajax({
+            url: "/notifications/" + id + "/cancel",
+            type: "POST",
+            contentType: "application/json",
+            success: function (response) {
+                console.log(response);
+                readonly.set(response);
+                refresh(id);
+            },
+            error: function (error) {
+                console.log("Something went wrong", error);
+                var errorJson = {error: error.responseText};
+                readonly.set(errorJson);
+            }
+        });
+    }
+
+
+    function publish() {
+        var url = "notifications";
+        var data = editor.get();
+        var id = data.id;
+        if (id) {
+            url = url + "/" + id;
+        }
+        $.ajax({
+            url: url,
+            type: "POST",
+            data: JSON.stringify(data),
+            contentType: "application/json",
+            dataType: "json",
+            success: function (response) {
+                console.log(response);
+                var id = response.id;
+                if (id != undefined) {
+
+                    $('#' + id).remove();
+
+                    if ($('#' + id).length == 0) {
+                        $('#notifications > tbody').prepend('<tr id="' + id + '">' + '<th scope="row">' + id + '</th>' +
+                            '<td> <button class="btn btn-primary btn-sm" onclick="refresh(' + '\'' + id + '\'' + ')">Refresh</button> </td>' +
+                            '<td> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="cancel(' + '\'' + id + '\'' + ')">Cancel</button> ' +
+                            '<button class="btn btn-danger btn-sm">Read</button> ' +
+                            '<button class="btn btn-danger btn-sm">Ack</button> ' +
+                            '<button class="btn btn-danger btn-sm">Action</button>' +
+                            '</td>' + '</tr>');
+                        readonly.set(response);
+                    }
+
+                }
+            },
+            error: function (error) {
+                console.log("Something went wrong", error);
+                var errorJson = {error: error.responseText};
+                readonly.set(errorJson);
+            }
+        });
+    }
+
+    jQuery.ajaxSettings.traditional = true;
+
+
+    var source = new EventSource("/notifications/subscribe?ApiKey=key&channel=deneme");
+    source.onopen = function () {
+        console.log("Connection is open.");
+    };
+
+
+    source.onmessage = function (event) {
+        console.log(event.data);
+    };
+
+</script>
+</body>
+</html>

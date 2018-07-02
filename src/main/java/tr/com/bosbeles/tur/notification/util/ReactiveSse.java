@@ -1,20 +1,27 @@
 package tr.com.bosbeles.tur.notification.util;
 
+import lombok.Data;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
 import reactor.core.scheduler.Schedulers;
 
+import java.time.Instant;
+
+
 public class ReactiveSse<T> {
 
 
+    private final String user;
+    private final Instant creationTime;
     private DirectProcessor<T> processor;
-
     private Flux<T> flux;
 
 
-    public ReactiveSse() {
+    public ReactiveSse(String user) {
+        this.user = user;
+        this.creationTime = Instant.now();
         processor = DirectProcessor.create();
-        flux = processor.subscribeOn(Schedulers.immediate());
+        flux = processor;
     }
 
     public DirectProcessor<T> getProcessor() {
@@ -25,8 +32,18 @@ public class ReactiveSse<T> {
         return flux;
     }
 
+    @Override
+    public String toString() {
+        return "ReactiveSse{" +
+                "user='" + user + '\'' +
+                ", creationTime=" + creationTime +
+                ", processor=" + processor +
+                ", flux=" + flux +
+                '}';
+    }
+
     public static void main(String[] args) {
-        ReactiveSse<String> sse = new ReactiveSse<>();
+        ReactiveSse<String> sse = new ReactiveSse<>("");
 
         sse.getFlux().subscribe(s -> System.out.println("::" + s));
 

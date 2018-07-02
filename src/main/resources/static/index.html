@@ -2,47 +2,198 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Title</title>
-    <link href="webjars/toastr/2.1.2/build/toastr.css" rel="stylesheet"/>
+    <title>Notification</title>
     <link href="webjars/bootstrap/4.1.0/css/bootstrap.min.css" rel="stylesheet"/>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.18.0/jsoneditor.css" rel="stylesheet">
 
 </head>
 <body>
-<button class="btn btn-success" onclick="publish()">Publish</button>
+<div class="container">
+    <div class="row">
+        <div class="col">
+            <div id="readonlyjson" style="width: 400px; height: 400px;"></div>
+        </div>
+    </div>
 
-<script src="webjars/jquery/3.3.1-1/jquery.min.js"></script>
-<script src="webjars/toastr/2.1.2/toastr.js"></script>
+    <form>
+        <div class="row">
+            <div class="col">
+                <input id="apiKey" type="text" class="form-control" placeholder="Api Key" value="123">
+            </div>
+            <div class="col">
+                <input id="channels" type="text" class="form-control" placeholder="Channels to Subscribe" value="deneme">
+            </div>
+            <div class="col">
+                <button type="button" class="btn btn-primary" onclick="subscribe()">Subscribe</button>
+            </div>
+        </div>
+    </form>
+
+</div>
+
+
+<br>
+
+<table class="table" id="notifications">
+    <thead>
+    <tr>
+        <th scope="col">Notification Id</th>
+        <th scope="col">Read</th>
+        <th scope="col">Ack</th>
+        <th scope="col">Action</th>
+    </tr>
+    </thead>
+    <tbody>
+
+    </tbody>
+</table>
+
 
 <script>
-    function publish() {
-        var data = {"data": {"name": "a"}};
+
+</script>
+
+<script src="webjars/jquery/3.3.1-1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsoneditor/5.18.0/jsoneditor.js"></script>
+
+<script>
+
+    var readonly;
+    var apiKey;
+
+    (function readonlyeditor() {
+        // create the editor
+        var container = document.getElementById("readonlyjson");
+        var options = {
+            mode: 'view',
+            modes: ['code', 'form', 'text', 'tree', 'view'], // allowed modes
+            onError: function (err) {
+                alert(err.toString());
+            },
+            onModeChange: function (newMode, oldMode) {
+                console.log('Mode switched from', oldMode, 'to', newMode);
+            }
+        };
+        readonly = new JSONEditor(container, options);
+        readonly.set("");
+        // set json
+    })();
+
+
+    function refresh(id) {
         $.ajax({
-            url: "/notifications",
-            type: "POST",
-            data: JSON.stringify(data),
-            contentType: "application/json",
-            dataType: "json",
+            url: "/notifications/" + id,
+            type: "GET",
             success: function (response) {
                 console.log(response);
+                readonly.set(response);
             },
             error: function (error) {
                 console.log("Something went wrong", error);
+                var errorJson = {error: error.responseText};
+                readonly.set(errorJson);
             }
         });
     }
 
+
     jQuery.ajaxSettings.traditional = true;
 
+    Array.prototype.extend = function (other_array) {
+        /* you should include a test to check whether other_array really is an array */
+        other_array.forEach(function (v) {
+            this.push(v)
+        }, this);
+    }
 
-    var source = new EventSource("/notifications/subscribe?ApiKey=key&channel=test.test");
-    source.onopen = function () {
-        console.log("Connection is open.");
+    var notifications = new Object();
+
+    var getNotifications = function (channels, recursive) {
+        if (channels != null) {
+            var channelsTrimmed = [];
+            for (var i = 0; i < channels.length; i++) {
+                channelsTrimmed.push(channels[i].trim());
+            }
+
+            $.get('/notifications',
+                {ApiKey: apiKey, channel: channelsTrimmed, recursive: recursive},
+                function (returnedData) {
+                    console.log(returnedData);
+
+                    var oldIds = [];
+
+                    for (var prop in notifications) {
+                        var arr = notifications[prop]
+                        if (Array.isArray(arr)) {
+                            var partialIds = arr.map(function (notification) {
+                                return notification.id;
+                            })
+                            oldIds.extend(partialIds);
+                        }
+                    }
+
+                    if (!recursive) {
+                        for (var i = 0; i < channelsTrimmed.length; i++) {
+                            notifications[channelsTrimmed[i]] = returnedData[channelsTrimmed[i]];
+                        }
+                    } else {
+                        notifications = returnedData;
+                    }
+
+                    var newIds = [];
+                    for (var prop in notifications) {
+                        var arr = notifications[prop]
+                        if (Array.isArray(arr)) {
+                            var partialIds = arr.map(function (notification) {
+                                return notification.id;
+                            })
+                            newIds.extend(partialIds);
+                        }
+                    }
+
+                    var count = 0;
+                    $('#notifications > tbody').empty();
+                    for (var prop in notifications) {
+                        var arr = notifications[prop]
+                        if (Array.isArray(arr)) {
+                            for (var i = 0; i < arr.length; i++) {
+                                var id = arr[i].id;
+                                $('#notifications > tbody').append('<tr id="' + id + '">' + '<th scope="row">' + id + '</th>' +
+                                    '</tr>');
+                            }
+                        }
+                    }
+                }
+            );
+        }
     };
 
+    function subscribe() {
+        apiKey = $('#apiKey').val();
+        var channels = $('#channels').val().split(",");
+        var url = "/notifications/subscribe?ApiKey=" + apiKey;
+        for (var i = 0; i < channels.length; i++) {
+            url = url + "&channel=" + channels[i].trim();
+        }
+        var source = new EventSource(url);
+        source.onopen = function () {
+            console.log("Connection is open.");
+            getNotifications(channels, true);
+        };
 
-    source.onmessage = function (event) {
-        console.log(event.data);
-    };
+
+        source.onmessage = function (event) {
+            console.log(event.data);
+            console.log(Array.isArray(event.data));
+
+            var data = JSON.parse(event.data);
+            if(Array.isArray(data) && data.length > 0) {
+                getNotifications(data, false);
+            }
+
+        };
+    }
+
 
 </script>
 </body>

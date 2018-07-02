@@ -27,7 +27,7 @@ public class ExpireService {
     @Autowired
     private ChangeEmitter manager;
 
-    @Scheduled(fixedDelay = 1000)
+    @Scheduled(fixedDelay = 5000)
     public void expireCheck() {
         Query query = new Query();
 
@@ -43,7 +43,7 @@ public class ExpireService {
         operations.updateMulti(query, update, Notification.class);
 
         query = new Query();
-        query.addCriteria(where("currentState").is(Notification.NotificationState.EXPIRED).and("expiredAt").lte(now).and("modifiedAt").is(now));
+        query.addCriteria(where("currentState").is(Notification.NotificationState.EXPIRED).and("expireAt").lte(now).and("modifiedAt").is(now));
 
         List<Notification> notifications = operations.find(query, Notification.class);
         if (notifications.size() > 0) {

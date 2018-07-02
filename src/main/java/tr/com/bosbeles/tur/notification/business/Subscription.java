@@ -4,19 +4,20 @@ import lombok.Getter;
 import tr.com.bosbeles.tur.notification.util.ReactiveSse;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 public class Subscription {
 
     @Getter
-    private ReactiveSse<String> emitter;
+    private ReactiveSse<List<String>> emitter;
 
     @Getter
     private Set<String> channels;
 
     private Runnable onCloseCallback;
 
-    public Subscription(ReactiveSse<String> emitter, Set<String> channels) {
+    public Subscription(ReactiveSse<List<String>> emitter, Set<String> channels) {
         this.emitter = emitter;
         this.channels = Collections.unmodifiableSet(channels);
 
@@ -24,10 +25,15 @@ public class Subscription {
 
     public void onClose(Runnable callback) {
         this.onCloseCallback = callback;
-        emitter.getProcessor().doOnComplete(onCloseCallback);
+        emitter.getProcessor()
+                .doOnError(throwable ->{
+                    System.out.println("DoOnError");
+                    close();})
+                .doOnComplete(onCloseCallback).doOnCancel(this::close);
     }
 
     public void close() {
+        System.out.println("Closing...");
         if (onCloseCallback != null) {
             onCloseCallback.run();
         }

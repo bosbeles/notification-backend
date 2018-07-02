@@ -26,8 +26,14 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
     public Flux<Notification> findByChannels(Collection<String> channels, LocalDateTime expireDate, Sort sort, boolean recursive) {
         Query query = new Query();
 
-        query.addCriteria(where("terminated").is(false).andOperator(new Criteria().orOperator(where("expiredAt").exists(false), where("expiredAt").gt(expireDate)), getChannelRegex(channels, recursive)));
-        query.with(sort);
+        query.addCriteria(
+                where("terminated").is(false)
+                        .andOperator(
+                                new Criteria()
+                                        .orOperator(
+                                                where("expireAt").exists(false),
+                                                where("expireAt").gt(expireDate)),
+                                getChannelRegex(channels, recursive)));
 
         Flux<Notification> notifications = operations.find(query, Notification.class);
 
@@ -37,11 +43,11 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
 
     private Criteria getChannelRegex(Collection<String> channels, boolean recursive) {
         Criteria[] inCriteria = new Criteria[recursive ? channels.size() + 1 : 1];
-        inCriteria[0] = where("channel").in(channels);
+        inCriteria[0] = where("configuration.channel").in(channels);
         if (recursive) {
             int i = 1;
             for (String channel : channels) {
-                inCriteria[i++] = where("channel").regex(channel.replaceAll("\\.", "\\\\.") + "\\.");
+                inCriteria[i++] = where("configuration.channel").regex(channel.replaceAll("\\.", "\\\\.") + "\\.");
             }
         }
 

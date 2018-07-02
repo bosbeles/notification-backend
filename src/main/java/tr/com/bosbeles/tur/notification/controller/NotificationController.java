@@ -1,5 +1,6 @@
 package tr.com.bosbeles.tur.notification.controller;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -7,10 +8,13 @@ import reactor.core.publisher.Mono;
 import tr.com.bosbeles.tur.notification.business.NotificationManager;
 import tr.com.bosbeles.tur.notification.model.Notification;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+@Slf4j
 @RestController
 @RequestMapping("notifications")
 public class NotificationController {
@@ -68,9 +72,19 @@ public class NotificationController {
 
 
     @GetMapping(value = "/subscribe", produces = "text/event-stream")
-    public Flux<String> subscribe(@RequestParam(name = "ApiKey") final String apiKey, final @RequestParam(name = "channel") String[] channels) {
-        System.out.println(apiKey + " connected.");
-        return notificationManager.subscribe(apiKey, channels);
+    public Flux<List<String>> subscribe(@RequestParam(name = "ApiKey") final String apiKey, final @RequestParam(name = "channel") String[] channels) {
+        log.error("Connected: {}", apiKey);
+        List<String> list = Collections.emptyList();
+        // list.add("xxx");
+        return notificationManager.subscribe(apiKey, channels).startWith(list).doOnError(throwable -> {
+            System.out.println("Olmuyor ki.");
+        }).doOnTerminate(() -> {
+            System.out.println("terminator.");
+        }).doOnEach(s -> {
+            System.out.println("Geldi yine.");
+        }).doOnCancel(()->{
+            System.out.println("Cancel etmeliydi.");
+        }).log("category", Level.WARNING).map(t -> t).log("category2");
     }
 
 }

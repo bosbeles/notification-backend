@@ -14,10 +14,7 @@ import tr.com.bosbeles.tur.notification.repository.NotificationReportRepository;
 import tr.com.bosbeles.tur.notification.repository.NotificationRepository;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -54,11 +51,12 @@ public class NotificationManager {
             return Flux.empty();
         }
         //TODO ttl sorgusundan elenen notificationlar modified olmamis olacak.
-        return notificationRepository.findByChannels(validChannels, LocalDateTime.now(), new Sort(Sort.Direction.DESC, "modified"), recursive);
+        return notificationRepository.findByChannels(validChannels, LocalDateTime.now(), new Sort(Sort.Direction.DESC, "modifiedAt"), recursive);
     }
 
 
     public Mono<Notification> create(Notification notification) {
+        notification = new Notification(notification);
         return decorate(notification).then(createAfterDecoration(notification));
     }
 
@@ -178,7 +176,7 @@ public class NotificationManager {
     }
 
 
-    public Flux<String> subscribe(String user, String[] channels) {
+    public Flux<List<String>> subscribe(String user, String[] channels) {
         return subscriptionManager.subscribe(user, channels);
     }
 
@@ -193,6 +191,7 @@ public class NotificationManager {
     }
 
     private boolean updateNotification(Notification old, Notification notification) {
+        notification = new Notification(notification);
         // terminated ise update yaptirma
         old.advanceState();
         if (old.isTerminated()) {
@@ -219,7 +218,6 @@ public class NotificationManager {
     }
 
     private Mono<Void> decorate(final Notification notification) {
-        System.out.println("decorated");
         if (notification.getTemplate() == null) {
             return Mono.empty();
         }

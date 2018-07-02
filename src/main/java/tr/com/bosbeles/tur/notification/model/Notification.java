@@ -3,6 +3,8 @@ package tr.com.bosbeles.tur.notification.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.LastModifiedBy;
+import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
 import tr.com.bosbeles.tur.notification.model.internal.Configuration;
@@ -34,11 +36,23 @@ public class Notification {
     private NotificationState currentState;
 
     private LocalDateTime expireAt;
+
+    @LastModifiedDate
     private LocalDateTime modifiedAt;
 
     @Version
     private Long version;
 
+
+    public Notification() {
+
+    }
+
+
+    public Notification(Notification copy) {
+        setData(copy.getData());
+        setConfiguration(copy.getConfiguration());
+    }
 
     public NotificationType getNotificationType() {
         NotificationType type = NotificationType.SIMPLE;
@@ -82,6 +96,13 @@ public class Notification {
             states = new ArrayList<>();
         }
         configuration.fill();
+    }
+
+    public void clear() {
+        terminated = false;
+        states = null;
+        version = 0l;
+
     }
 
     private void otherCases() {

@@ -9,6 +9,8 @@ import reactor.core.publisher.Flux;
 import tr.com.bosbeles.tur.notification.util.ReactiveSse;
 
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -25,8 +27,8 @@ public class SubscriptionManager {
     }
 
 
-    public Flux<String> subscribe(String user, String[] channels) {
-        ReactiveSse<String> reactiveSse = new ReactiveSse<>();
+    public Flux<List<String>> subscribe(String user, String[] channels) {
+        ReactiveSse<List<String>> reactiveSse = new ReactiveSse<>(user);
 
         final Set<String> validChannels = Arrays.stream(channels).filter(c -> NotificationManager.CHANNEL_PATTERN.matcher(c).matches()).collect(Collectors.toSet());
         final Subscription subscription = new Subscription(reactiveSse, validChannels);

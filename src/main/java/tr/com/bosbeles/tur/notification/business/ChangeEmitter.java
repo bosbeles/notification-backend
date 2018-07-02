@@ -74,10 +74,10 @@ public class ChangeEmitter {
 
         for (Subscription subscription : allEmitters) {
             try {
-                Object message = channels.stream().filter(subscription::belongsTo).collect(Collectors.toList());
-                subscription.getEmitter().getProcessor().onNext(message.toString());
+                List<String> message = channels.stream().filter(subscription::belongsTo).collect(Collectors.toList());
+                subscription.getEmitter().getProcessor().onNext(message);
             } catch (Exception e) {
-                e.printStackTrace();
+                log.trace("SSE peer disconnected.", e);
                 subscription.close();
             }
         }
