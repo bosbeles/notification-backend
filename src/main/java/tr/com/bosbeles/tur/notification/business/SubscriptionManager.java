@@ -38,7 +38,10 @@ public class SubscriptionManager {
             subscription.getChannels().stream().forEach(c -> subscriptions.remove(c, subscription));
         });
 
-        return reactiveSse.getFlux();
+        return reactiveSse.getFlux().doOnCancel(()->{
+            System.out.println("Cancellation...");
+            subscription.close();
+        });
     }
 
     public SetMultimap<String, Subscription> getSubscriptions() {
