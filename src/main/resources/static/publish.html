@@ -19,6 +19,7 @@
     </div>
     <div class="row">
         <div class="col">
+            <input id="apiKey" type="text" placeholder="Api Key" value="key">
             <button class="btn btn-primary" onclick="publish()">Publish</button>
             <button class="btn btn-secondary" onclick="simple()">Simple</button>
             <button class="btn btn-secondary" onclick="full()">Full</button>
@@ -71,8 +72,9 @@
 
     var fullJson = {
         "configuration": {
-            "timeout": 0,
+            "timeout": 100,
             "channel": "deneme",
+            "acknowledgement": {"required": 1}
         },
         "data": {
             "category": "cat-1",
@@ -149,10 +151,9 @@
         });
     }
 
-
-    function cancel(id) {
+    function rest(id, action) {
         $.ajax({
-            url: "/notifications/" + id + "/cancel",
+            url: "/notifications/" + id + "/" + action + "?ApiKey=" + $("#apiKey").val(),
             type: "POST",
             contentType: "application/json",
             success: function (response) {
@@ -166,6 +167,22 @@
                 readonly.set(errorJson);
             }
         });
+    }
+
+    function cancel(id) {
+        rest(id, "cancel");
+    }
+
+    function read(id) {
+        rest(id, "read");
+    }
+
+    function ack(id) {
+        rest(id, "ack");
+    }
+
+    function handle(id) {
+        rest(id, "handle");
     }
 
 
@@ -194,9 +211,9 @@
                             '<td> <button class="btn btn-primary btn-sm" onclick="refresh(' + '\'' + id + '\'' + ')">Refresh</button> </td>' +
                             '<td> ' +
                             '<button class="btn btn-danger btn-sm" onclick="cancel(' + '\'' + id + '\'' + ')">Cancel</button> ' +
-                            '<button class="btn btn-danger btn-sm">Read</button> ' +
-                            '<button class="btn btn-danger btn-sm">Ack</button> ' +
-                            '<button class="btn btn-danger btn-sm">Action</button>' +
+                            '<button class="btn btn-danger btn-sm" onclick="read(' + '\'' + id + '\'' + ')">Read</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="ack(' + '\'' + id + '\'' + ')">Ack</button> ' +
+                            '<button class="btn btn-danger btn-sm" onclick="handle(' + '\'' + id + '\'' + ')">Action</button> ' +
                             '</td>' + '</tr>');
                         readonly.set(response);
                     }
@@ -213,16 +230,6 @@
 
     jQuery.ajaxSettings.traditional = true;
 
-
-    var source = new EventSource("/notifications/subscribe?ApiKey=key&channel=deneme");
-    source.onopen = function () {
-        console.log("Connection is open.");
-    };
-
-
-    source.onmessage = function (event) {
-        console.log(event.data);
-    };
 
 </script>
 </body>

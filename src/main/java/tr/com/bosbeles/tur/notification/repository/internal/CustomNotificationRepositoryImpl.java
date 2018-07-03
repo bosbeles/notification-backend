@@ -1,6 +1,5 @@
 package tr.com.bosbeles.tur.notification.repository.internal;
 
-import com.mongodb.client.result.UpdateResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -10,7 +9,6 @@ import org.springframework.data.mongodb.core.query.Update;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import tr.com.bosbeles.tur.notification.model.Notification;
-import tr.com.bosbeles.tur.notification.model.internal.State;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -56,24 +54,26 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
 
 
     @Override
-    public Mono<UpdateResult> incrementAck(Notification notification) {
+    public Mono<Void> incrementAck(Notification notification) {
         Query query = new Query();
         query.addCriteria(Criteria.where("id").is(notification.getId()));
 
         Update update = new Update();
-        update.inc("configuration.acknowledgement.required", 1);
-        return operations.updateFirst(query, update, Notification.class);
+        update.inc("configuration.acknowledgement.count", 1);
+
+
+        return operations.updateFirst(query, update, Notification.class)
+                .flatMap(updateResult -> operations.findById(notification.getId(), Notification.class))
+                .flatMap(n -> checkAckCount(n)).then();
     }
 
-    public void checkAckCount(Notification notification) {
-        Criteria criteria = Criteria.where("id").is(notification.getId()).and("configuration.acknowledgement.required").gte(notification.getConfiguration().getAcknowledgement().getCount());
-        criteria.and("terminated").is(false);
-
-
-        Update update = new Update();
-        update.push("states", new State(Notification.NotificationState.ACKED));
-        update.set("currentState", Notification.NotificationState.ACKED);
-        operations.updateFirst(new Query(Criteria.where("expireAt").orOperator(Criteria.where(""))), update, Notification.class);
+    @Override
+    public Mono<Notification> checkAckCount(Notification notification) {
+        if (notification.advanceState()) {
+            return operations.save(notification);
+        } else {
+            return Mono.just(notification);
+        }
 
     }
 

@@ -11,7 +11,6 @@ import tr.com.bosbeles.tur.notification.model.Notification;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -76,15 +75,10 @@ public class NotificationController {
         log.error("Connected: {}", apiKey);
         List<String> list = Collections.emptyList();
         // list.add("xxx");
-        return notificationManager.subscribe(apiKey, channels).startWith(list).doOnError(throwable -> {
-            System.out.println("Olmuyor ki.");
-        }).doOnTerminate(() -> {
-            System.out.println("terminator.");
-        }).doOnEach(s -> {
-            System.out.println("Geldi yine.");
-        }).doOnCancel(()->{
-            System.out.println("Cancel etmeliydi.");
-        }).log("category", Level.WARNING).map(t -> t).log("category2");
+        return notificationManager.subscribe(apiKey, channels)
+                .startWith(list)
+                .log("category");
+
     }
 
 }

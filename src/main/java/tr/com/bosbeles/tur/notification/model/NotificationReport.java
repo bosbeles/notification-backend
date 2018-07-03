@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 import java.time.LocalDateTime;
 
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
                 unique = true,
                 def = "{'notificationId' : 1, 'userId' : 1}")
 })
+@Document(collection = "notificationReports")
 public class NotificationReport {
 
     private String notificationId;

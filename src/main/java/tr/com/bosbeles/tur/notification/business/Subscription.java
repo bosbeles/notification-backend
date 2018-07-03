@@ -25,15 +25,9 @@ public class Subscription {
 
     public void onClose(Runnable callback) {
         this.onCloseCallback = callback;
-        emitter.getProcessor()
-                .doOnError(throwable ->{
-                    System.out.println("DoOnError");
-                    close();})
-                .doOnComplete(onCloseCallback).doOnCancel(this::close);
     }
 
     public void close() {
-        System.out.println("Closing...");
         if (onCloseCallback != null) {
             onCloseCallback.run();
         }
@@ -49,4 +43,11 @@ public class Subscription {
         return false;
     }
 
+    @Override
+    public String toString() {
+        return "Subscription{" +
+                "emitter=" + emitter +
+                ", channels=" + channels +
+                '}';
+    }
 }

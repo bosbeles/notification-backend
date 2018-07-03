@@ -9,7 +9,6 @@ import reactor.core.publisher.Flux;
 import tr.com.bosbeles.tur.notification.util.ReactiveSse;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -39,7 +38,6 @@ public class SubscriptionManager {
         });
 
         return reactiveSse.getFlux().doOnCancel(()->{
-            System.out.println("Cancellation...");
             subscription.close();
         });
     }

@@ -25,6 +25,9 @@ public class Configuration {
         if (timeout < 0) {
             timeout = template.getTimeout();
         }
+        if (timeout < 0) {
+            timeout = 0;
+        }
     }
 
     public void fill() {

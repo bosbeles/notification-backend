@@ -3,7 +3,6 @@ package tr.com.bosbeles.tur.notification.model;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.annotation.LastModifiedDate;
 import org.springframework.data.annotation.Version;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -65,9 +64,9 @@ public class Notification {
         return type;
     }
 
-    public void advanceState() {
+    public boolean advanceState() {
         if (isTerminated()) {
-            return;
+            return false;
         }
         switch (currentState) {
             case HANDLED:
@@ -81,16 +80,15 @@ public class Notification {
                 }
                 break;
             default:
-                otherCases();
+                return otherCases();
         }
-
+        return terminated;
     }
 
 
     public void fill() {
         if (configuration == null) {
             configuration = new Configuration();
-            configuration.fill();
         }
         if (states == null) {
             states = new ArrayList<>();
@@ -105,7 +103,7 @@ public class Notification {
 
     }
 
-    private void otherCases() {
+    private boolean otherCases() {
         int required = getConfiguration().getAcknowledgement().getRequired();
         if (required > 0 && required <= getConfiguration().getAcknowledgement().getCount()) {
             currentState = NotificationState.ACKED;
@@ -117,7 +115,10 @@ public class Notification {
             currentState = NotificationState.EXPIRED;
             states.add(new State(currentState));
             terminated = true;
+        } else {
+            return false;
         }
+        return true;
     }
 
 

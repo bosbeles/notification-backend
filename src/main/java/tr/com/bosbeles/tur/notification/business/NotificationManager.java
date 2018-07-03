@@ -112,13 +112,16 @@ public class NotificationManager {
                     if (currentState != Notification.NotificationState.CREATED && currentState != Notification.NotificationState.UPDATED) {
                         return Mono.error(new Exception("Notification is already acknowledged or terminated."));
                     }
-                    return notificationReportRepository.ack(user, notificationId).onErrorReturn(null).flatMap(updateResult -> {
-                        if (updateResult != null) {
-                            return notificationRepository.incrementAck(notification).then();
+                    return notificationReportRepository.ack(user, notificationId).log("ack").flatMap(updateResult -> {
+                        if (updateResult != null && updateResult.wasAcknowledged()) {
+                            return notificationRepository.incrementAck(notification).then().doFinally(signal -> emit(notification));
                         } else {
-                            return Mono.error(new Exception("Notification is already acknowledged or terminated."));
+                            return notificationRepository.checkAckCount(notification)
+                                    .then()
+                                    .doFinally(signal -> emit(notification))
+                                    .onErrorResume(t -> Mono.error(new Exception("Notification is already acknowledged or terminated.")));
                         }
-                    });
+                    }).log("cak");
                 });
     }
 
