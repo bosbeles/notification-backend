@@ -1,9 +1,7 @@
 package tr.com.bosbeles.tur.notification.util;
 
-import lombok.Data;
 import reactor.core.publisher.DirectProcessor;
 import reactor.core.publisher.Flux;
-import reactor.core.scheduler.Schedulers;
 
 import java.time.Instant;
 

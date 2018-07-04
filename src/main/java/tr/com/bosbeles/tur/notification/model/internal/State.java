@@ -4,7 +4,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import tr.com.bosbeles.tur.notification.model.Notification;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 

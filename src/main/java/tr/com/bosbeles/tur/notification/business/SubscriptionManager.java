@@ -37,7 +37,7 @@ public class SubscriptionManager {
             subscription.getChannels().stream().forEach(c -> subscriptions.remove(c, subscription));
         });
 
-        return reactiveSse.getFlux().doOnCancel(()->{
+        return reactiveSse.getFlux().doOnCancel(() -> {
             subscription.close();
         });
     }

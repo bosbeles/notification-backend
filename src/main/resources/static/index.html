@@ -21,7 +21,8 @@
                 <input id="apiKey" type="text" class="form-control" placeholder="Api Key" value="123">
             </div>
             <div class="col">
-                <input id="channels" type="text" class="form-control" placeholder="Channels to Subscribe" value="deneme">
+                <input id="channels" type="text" class="form-control" placeholder="Channels to Subscribe"
+                       value="deneme">
             </div>
             <div class="col">
                 <button type="button" class="btn btn-primary" onclick="subscribe()">Subscribe</button>
@@ -187,7 +188,7 @@
             console.log(Array.isArray(event.data));
 
             var data = JSON.parse(event.data);
-            if(Array.isArray(data) && data.length > 0) {
+            if (Array.isArray(data) && data.length > 0) {
                 getNotifications(data, false);
             }
 

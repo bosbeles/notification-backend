@@ -269,20 +269,4 @@ public class NotificationManager {
         return notificationRepository.save(notification)
                 .doFinally(signal -> emit(notification));
     }
-
-    public static void main(String[] args) {
-        NotificationManager manager = new NotificationManager();
-        Notification notification = new Notification();
-
-        manager.decorate(notification).doFinally(signalType -> System.out.println("success1")).then(other(notification)).doOnSuccess(signalType -> System.out.println("success2")).block();
-
-
-    }
-
-    static Mono<Integer> other(Notification n) {
-        System.out.println("Other");
-        return Mono.just(7);
-    }
-
-
 }
