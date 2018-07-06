@@ -6,5 +6,4 @@ import tr.com.bosbeles.tur.notification.repository.internal.CustomNotificationRe
 
 public interface NotificationRepository extends ReactiveCrudRepository<Notification, String>, CustomNotificationRepository {
 
-
 }

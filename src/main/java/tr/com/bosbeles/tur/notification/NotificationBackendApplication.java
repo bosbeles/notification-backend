@@ -18,6 +18,10 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 public class NotificationBackendApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(NotificationBackendApplication.class, args);
+        final SpringApplication application = new SpringApplication(NotificationBackendApplication.class);
+        // Swagger works only in servlet mode. see https://github.com/springfox/springfox/issues/1773
+
+        // application.setWebApplicationType(WebApplicationType.);
+        application.run(args);
     }
 }

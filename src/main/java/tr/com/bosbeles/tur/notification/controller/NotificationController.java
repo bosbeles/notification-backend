@@ -29,6 +29,8 @@ public class NotificationController {
 
     @GetMapping("{id}")
     public Mono<Notification> get(@PathVariable String id) {
+
+
         return notificationManager.find(id);
     }
 

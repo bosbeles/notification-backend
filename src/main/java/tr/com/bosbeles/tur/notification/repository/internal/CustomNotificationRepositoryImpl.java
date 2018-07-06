@@ -1,5 +1,9 @@
 package tr.com.bosbeles.tur.notification.repository.internal;
 
+import com.github.rutledgepaulv.qbuilders.builders.GeneralQueryBuilder;
+import com.github.rutledgepaulv.qbuilders.conditions.Condition;
+import com.github.rutledgepaulv.qbuilders.visitors.MongoVisitor;
+import com.github.rutledgepaulv.rqe.pipes.QueryConversionPipeline;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
@@ -20,10 +24,10 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
     @Autowired
     private ReactiveMongoOperations operations;
 
+
     @Override
     public Flux<Notification> findByChannels(Collection<String> channels, LocalDateTime expireDate, Sort sort, boolean recursive) {
         Query query = new Query();
-
         query.addCriteria(
                 where("terminated").is(false)
                         .andOperator(
@@ -56,7 +60,13 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
     @Override
     public Mono<Void> incrementAck(Notification notification) {
         Query query = new Query();
-        query.addCriteria(Criteria.where("id").is(notification.getId()));
+
+        QueryConversionPipeline pipeline = QueryConversionPipeline.defaultPipeline();
+        Condition<GeneralQueryBuilder> condition = pipeline.apply("id==" + notification.getId(), Notification.class);
+        Criteria criteria = condition.query(new MongoVisitor());
+
+        query.addCriteria(criteria);
+        //query.addCriteria(Criteria.where("id").is(notification.getId()));
 
         Update update = new Update();
         update.inc("configuration.acknowledgement.count", 1);

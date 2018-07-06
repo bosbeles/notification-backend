@@ -14,4 +14,5 @@ public interface CustomNotificationRepository {
     Mono<Void> incrementAck(Notification notification);
 
     Mono<Notification> checkAckCount(Notification notification);
+
 }

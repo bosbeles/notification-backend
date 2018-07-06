@@ -80,6 +80,51 @@
         // set json
     })();
 
+    function show(id) {
+
+        for (var prop in notifications) {
+            var arr = notifications[prop]
+            if (Array.isArray(arr)) {
+                for (var i = 0; i < arr.length; i++) {
+                    if (arr[i].id == id) {
+                        readonly.set(arr[i]);
+                        break;
+                    }
+                }
+
+            }
+        }
+    }
+
+    function rest(id, action) {
+        $.ajax({
+            url: "/notifications/" + id + "/" + action + "?ApiKey=" + apiKey,
+            type: "POST",
+            contentType: "application/json",
+            success: function (response) {
+                console.log(response);
+                readonly.set(response);
+                refresh(id);
+            },
+            error: function (error) {
+                console.log("Something went wrong", error);
+                var errorJson = {error: error.responseText};
+                readonly.set(errorJson);
+            }
+        });
+    }
+
+    function ack(id) {
+        rest(id, "ack");
+    }
+
+    function action(id) {
+        rest(id, "handle");
+    }
+
+    function read(id) {
+        rest(id, "read");
+    }
 
     function refresh(id) {
         $.ajax({
@@ -109,16 +154,20 @@
 
     var notifications = new Object();
 
+
     var getNotifications = function (channels, recursive) {
         if (channels != null) {
             var channelsTrimmed = [];
             for (var i = 0; i < channels.length; i++) {
                 channelsTrimmed.push(channels[i].trim());
             }
-
+            var tt = new Date().getTime();
             $.get('/notifications',
                 {ApiKey: apiKey, channel: channelsTrimmed, recursive: recursive},
                 function (returnedData) {
+
+                    var t = new Date().getTime();
+                    console.log(t - tt);
                     console.log(returnedData);
 
                     var oldIds = [];
@@ -159,11 +208,17 @@
                         if (Array.isArray(arr)) {
                             for (var i = 0; i < arr.length; i++) {
                                 var id = arr[i].id;
-                                $('#notifications > tbody').append('<tr id="' + id + '">' + '<th scope="row">' + id + '</th>' +
+                                $('#notifications > tbody').append('<tr id="' + id + '">' +
+                                    '<th scope="row" onclick="show(\'' + id + '\')">' + id + '</th>' +
+                                    '<td><button class="btn btn-primary btn-sm" onclick="read(\'' + id + '\')">read</button></td>' +
+                                    '<td><button class="btn btn-primary btn-sm" onclick="ack(\'' + id + '\')">ack</button></td>' +
+                                    '<td><button class="btn btn-primary btn-sm" onclick="action(\'' + id + '\')">action</button></td>' +
                                     '</tr>');
                             }
                         }
                     }
+                    t = new Date().getTime() - t;
+                    console.log("elapsed time: " + t);
                 }
             );
         }
@@ -193,6 +248,8 @@
             }
 
         };
+
+
     }
 
 
