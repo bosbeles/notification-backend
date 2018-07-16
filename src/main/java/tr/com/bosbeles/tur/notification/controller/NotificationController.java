@@ -2,6 +2,8 @@ package tr.com.bosbeles.tur.notification.controller;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -65,8 +67,13 @@ public class NotificationController {
     //TODO Channel listesi icin tek query calistirilabilir ya da
     //ayri query'lerin sonuclari birlestirilebilir (ya da kesişmeyen query'lerin sonuclari birlestirilir)
     @GetMapping
-    public Mono<Map<String, List<Notification>>> getNotifications(@RequestParam("channel") String[] channels, @RequestParam(required = false) boolean recursive) {
-        Flux<Notification> notifications = notificationManager.findAll(channels, recursive);
+    public Mono<Map<String, List<Notification>>> getNotifications(@RequestParam("channel") String[] channels, @RequestParam(required = false) boolean recursive, @RequestParam(required = false) String where, @RequestParam(defaultValue = "0") Integer page, @RequestParam(defaultValue = "1000") Integer size, Sort sort) {
+        System.out.println("sort:" + sort);
+        System.out.println("where: " + where);
+        System.out.println("page: " + page);
+        System.out.println("size: " + size);
+        Flux<Notification> notifications = notificationManager.findAll(channels, recursive, where, PageRequest.of(page, size), sort);
+        notifications.subscribe(n -> System.out.println(n));
         Mono<Map<String, List<Notification>>> groupedByChannel = notifications.collect(Collectors.groupingBy(n -> n.getConfiguration().getChannel()));
         return groupedByChannel;
     }

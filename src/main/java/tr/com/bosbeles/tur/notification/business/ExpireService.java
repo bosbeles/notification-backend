@@ -6,7 +6,6 @@ import org.springframework.data.mongodb.core.MongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import tr.com.bosbeles.tur.notification.model.Notification;
 import tr.com.bosbeles.tur.notification.model.internal.State;
@@ -27,7 +26,7 @@ public class ExpireService {
     @Autowired
     private ChangeEmitter manager;
 
-    @Scheduled(fixedDelay = 5000)
+    //@Scheduled(fixedDelay = 5000)
     public void expireCheck() {
         Query query = new Query();
 

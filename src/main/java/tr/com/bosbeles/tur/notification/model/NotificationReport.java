@@ -6,7 +6,7 @@ import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 @Data
 @EqualsAndHashCode(of = {"notificationId", "userId"})
@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
                 unique = true,
                 def = "{'notificationId' : 1, 'userId' : 1}")
 })
-@Document(collection = "notificationReports")
+@Document(collection = "notificationReports ")
 public class NotificationReport {
 
     private String notificationId;
     private String userId;
 
-    private LocalDateTime read;
-    private LocalDateTime ack;
+    private Instant read;
+    private Instant ack;
 
 }

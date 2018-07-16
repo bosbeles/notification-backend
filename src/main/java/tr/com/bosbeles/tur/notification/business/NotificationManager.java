@@ -2,6 +2,7 @@ package tr.com.bosbeles.tur.notification.business;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -13,6 +14,7 @@ import tr.com.bosbeles.tur.notification.model.internal.State;
 import tr.com.bosbeles.tur.notification.repository.NotificationReportRepository;
 import tr.com.bosbeles.tur.notification.repository.NotificationRepository;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
@@ -45,13 +47,13 @@ public class NotificationManager {
         return notificationRepository.findById(notificationId);
     }
 
-    public Flux<Notification> findAll(String[] channels, boolean recursive) {
+    public Flux<Notification> findAll(String[] channels, boolean recursive, String rsql, PageRequest pageRequest, Sort sort) {
         final Set<String> validChannels = Arrays.stream(channels).filter(c -> CHANNEL_PATTERN.matcher(c).matches()).collect(Collectors.toSet());
         if (validChannels.isEmpty()) {
             return Flux.empty();
         }
         //TODO ttl sorgusundan elenen notificationlar modified olmamis olacak.
-        return notificationRepository.findByChannels(validChannels, LocalDateTime.now(), new Sort(Sort.Direction.DESC, "modifiedAt"), recursive);
+        return notificationRepository.findByChannels(validChannels, LocalDateTime.now(), rsql, pageRequest, sort, recursive);
     }
 
 
@@ -67,7 +69,7 @@ public class NotificationManager {
 
         notification.setId(null);
         if (notification.getConfiguration().getTimeout() > 0) {
-            notification.setExpireAt(LocalDateTime.now().plusSeconds(notification.getConfiguration().getTimeout()));
+            notification.setExpireAt(Instant.now().plusSeconds(notification.getConfiguration().getTimeout()));
         }
         return notificationRepository.save(notification).doOnSuccess(this::emit);
     }
@@ -216,7 +218,7 @@ public class NotificationManager {
 
         notification.setId(old.getId());
         if (notification.getConfiguration().getTimeout() > 0) {
-            notification.setExpireAt(LocalDateTime.now().plusSeconds(notification.getConfiguration().getTimeout()));
+            notification.setExpireAt(Instant.now().plusSeconds(notification.getConfiguration().getTimeout()));
         }
         return true;
     }

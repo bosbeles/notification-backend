@@ -5,6 +5,7 @@ import com.github.rutledgepaulv.qbuilders.conditions.Condition;
 import com.github.rutledgepaulv.qbuilders.visitors.MongoVisitor;
 import com.github.rutledgepaulv.rqe.pipes.QueryConversionPipeline;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.ReactiveMongoOperations;
 import org.springframework.data.mongodb.core.query.Criteria;
@@ -26,7 +27,7 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
 
 
     @Override
-    public Flux<Notification> findByChannels(Collection<String> channels, LocalDateTime expireDate, Sort sort, boolean recursive) {
+    public Flux<Notification> findByChannels(Collection<String> channels, LocalDateTime expireDate, String rsql, PageRequest pageRequest, Sort sort, boolean recursive) {
         Query query = new Query();
         query.addCriteria(
                 where("terminated").is(false)
@@ -37,7 +38,23 @@ public class CustomNotificationRepositoryImpl implements CustomNotificationRepos
                                                 where("expireAt").gt(expireDate)),
                                 getChannelRegex(channels, recursive)));
 
-        Flux<Notification> notifications = operations.find(query, Notification.class);
+        if (rsql != null) {
+            QueryConversionPipeline pipeline = QueryConversionPipeline.defaultPipeline();
+            Condition<GeneralQueryBuilder> condition = pipeline.apply(rsql, Notification.class);
+            Criteria criteria = condition.query(new MongoVisitor());
+            query.addCriteria(criteria);
+        }
+
+        if (sort != null) {
+            query.with(sort);
+        }
+
+        if (pageRequest != null) {
+            query.with(pageRequest);
+        }
+
+
+        Flux<Notification> notifications = operations.find(query, Notification.class).log();
 
         return notifications;
     }

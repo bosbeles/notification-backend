@@ -9,7 +9,7 @@ import org.springframework.data.mongodb.core.mapping.Document;
 import tr.com.bosbeles.tur.notification.model.internal.Configuration;
 import tr.com.bosbeles.tur.notification.model.internal.State;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -34,10 +34,10 @@ public class Notification {
     private List<State> states;
     private NotificationState currentState;
 
-    private LocalDateTime expireAt;
+    private Instant expireAt;
 
     @LastModifiedDate
-    private LocalDateTime modifiedAt;
+    private Instant modifiedAt;
 
     @Version
     private Long version;
@@ -111,7 +111,7 @@ public class Notification {
             if (getConfiguration().getAction().getRequired() <= 0) {
                 terminated = true;
             }
-        } else if (expireAt != null && LocalDateTime.now().isAfter(expireAt)) {
+        } else if (expireAt != null && Instant.now().isAfter(expireAt)) {
             currentState = NotificationState.EXPIRED;
             states.add(new State(currentState));
             terminated = true;
